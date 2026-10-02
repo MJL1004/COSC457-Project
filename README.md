@@ -1,7 +1,7 @@
 # Leo's Auto project
 
 Use the three files in **Report**. The app is already built as a starting point. 
-Check it against the interview and the required course software.
+Check it against the interview
 
 Report 1 Due: **Oct. 6th**  Final Due: **Dec. 1st**
 

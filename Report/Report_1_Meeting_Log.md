@@ -32,19 +32,16 @@ Purpose: Review what remains for Report 1 and assign the remaining work.
 
 | Member | Actual contribution during this meeting | Next task |
 | --- | --- | --- |
-| Mae Beeman |Interview completed, updating everyone on next steps | |
-| Marquise Grant | | |
-| Marcel Langdon | | |
-| Dashaun Townsend | | |
+| Mae Beeman |Interview completed, clarified next steps | |
+| Marquise Grant | Updated schema and ERD| |
+| Marcel Langdon | Updated application and screenshots| |
+| Dashaun Townsend | Organized and touched up Report 1 PDF| |
 
 Decisions made:
-- ________________________________________
-- ________________________________________
-- ________________________________________
+- Order of events to complete Report
+- How Report is organized
 
 Questions / issues still open:
-- ________________________________________
+- n/a
 
-Next meeting / group review: ____________________
-
-Record what actually happened; leave absent members' contributions blank or mark them absent.
+Next meeting / group review: TBD
