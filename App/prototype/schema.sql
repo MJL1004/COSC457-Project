@@ -13,6 +13,7 @@ CREATE TABLE vehicle(
   vehicle_id INTEGER PRIMARY KEY,
   customer_id INTEGER NOT NULL REFERENCES customer(customer_id),
   vin TEXT NOT NULL UNIQUE CHECK(length(trim(vin)) > 0),
+  license_plate TEXT NOT NULL CHECK(length(trim(license_plate)) > 0),
   model_year INTEGER NOT NULL CHECK(model_year BETWEEN 1886 AND 2100),
   make TEXT NOT NULL CHECK(length(trim(make)) > 0),
   model TEXT NOT NULL CHECK(length(trim(model)) > 0)
@@ -52,7 +53,12 @@ CREATE TABLE repair_order(
   status TEXT
     NOT NULL
     DEFAULT 'OPEN'
-    CHECK(status IN ('OPEN', 'IN_PROGRESS', 'COMPLETED', 'CANCELLED')),
+    CHECK(status IN ('OPEN', 'IN_PROGRESS', 'WAITING_FOR_PARTS', 'READY_FOR_PICKUP', 'COMPLETED', 'CANCELLED')),
+
+  approval_name TEXT NOT NULL DEFAULT '',
+
+  approved_at TEXT,
+  
   authorization_note TEXT NOT NULL DEFAULT ''
 );
 
@@ -92,6 +98,7 @@ CREATE TABLE invoice(
   vehicle_label TEXT NOT NULL,
   labor_cents INTEGER NOT NULL CHECK(labor_cents >= 0),
   parts_cents INTEGER NOT NULL CHECK(parts_cents >= 0),
+  shop_supplies_cents INTEGER NOT NULL CHECK(shop_supplies_cents >= 0),
   tax_cents INTEGER NOT NULL CHECK(tax_cents >= 0)
 );
 
@@ -102,9 +109,11 @@ CREATE TABLE payment(
   amount_cents INTEGER NOT NULL CHECK(amount_cents > 0),
   method TEXT
     NOT NULL
-    CHECK(method IN ('CASH', 'CHECK', 'CARD_RECORD', 'OTHER')),
+    CHECK(method IN ('CASH', 'CARD')),
   request_key TEXT NOT NULL UNIQUE
 );
+
+CREATE INDEX customer_phone_idx ON customer (phone);
 
 CREATE INDEX vehicle_customer_idx ON vehicle (customer_id);
 
@@ -141,7 +150,7 @@ FROM part p;
 CREATE VIEW invoice_balance AS
 SELECT
   i.*,
-  i.labor_cents + i.parts_cents + i.tax_cents AS total_cents,
+  i.labor_cents + i.parts_cents + i.shop_supplies_cents + i.tax_cents AS total_cents,
   COALESCE(
     (
       SELECT SUM(p.amount_cents)
@@ -151,7 +160,7 @@ SELECT
     ),
     0
   ) AS paid_cents,
-  i.labor_cents + i.parts_cents + i.tax_cents
+  i.labor_cents + i.parts_cents + i.shop_supplies_cents + i.tax_cents
   - COALESCE(
     (
       SELECT SUM(p.amount_cents)
@@ -211,9 +220,9 @@ END;
 
 CREATE TRIGGER payment_balance BEFORE INSERT ON payment
 WHEN NEW.amount_cents
-> (SELECT balance_cents FROM invoice_balance WHERE invoice_id = NEW.invoice_id)
+!= (SELECT balance_cents FROM invoice_balance WHERE invoice_id = NEW.invoice_id)
 BEGIN
-  SELECT RAISE(ABORT, 'Payment exceeds outstanding balance');
+  SELECT RAISE(ABORT, 'Payment must equal outstanding balance');
 END;
 
 CREATE TRIGGER labor_mechanic BEFORE INSERT ON labor_line
